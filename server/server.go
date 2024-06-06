@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/Its-Maniaco/ggcache/cache"
+	cmnd "github.com/Its-Maniaco/ggcache/cmd"
 )
 
 type ServerOpts struct {
@@ -44,6 +45,10 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) handleConn(conn net.Conn) {
+	defer func() {
+		conn.Close()
+	}()
+
 	buf := make([]byte, 2048)
 	for {
 		n, err := conn.Read(buf)
@@ -54,5 +59,27 @@ func (s *Server) handleConn(conn net.Conn) {
 
 		msg := buf[:n]
 		fmt.Println(string(msg))
+		go s.handleCmd(conn, buf[:n])
 	}
+}
+
+func (s *Server) handleCmd(conn net.Conn, rawCMD []byte) {
+	msg, err := cmnd.ParseMessage(rawCMD)
+	if err != nil {
+		fmt.Println("failed to parse command: ", err)
+		return
+	}
+
+	switch msg.Cmd {
+	case cmnd.CMDSet:
+		if err = s.handleSetCmd(conn, msg); err != nil {
+			return
+		}
+	}
+}
+
+func (s *Server) handleSetCmd(conn net.Conn, msg *cmnd.Message) error {
+	fmt.Println("handling the SET command: ", msg)
+
+	return nil
 }

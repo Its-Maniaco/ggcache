@@ -1,6 +1,10 @@
 package main
 
 import (
+	"log"
+	"net"
+	"time"
+
 	"github.com/Its-Maniaco/ggcache/cache"
 	"github.com/Its-Maniaco/ggcache/server"
 )
@@ -11,6 +15,15 @@ func main() {
 		IsLeader:   true,
 	}
 
-	server := server.NewServer(opts, cache.Cacher{})
+	go func() {
+		time.Sleep(time.Second * 2)
+		conn, err := net.Dial("tcp", opts.ListenAddr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		conn.Write([]byte("SET Foo bar 3000"))
+	}()
+
+	server := server.NewServer(opts, cache.New())
 	server.Start()
 }
