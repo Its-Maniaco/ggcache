@@ -21,7 +21,11 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		conn.Write([]byte("SET Foo bar 3000"))
+		conn.Write([]byte("SET Foo bar 300000000000"))
+
+		time.Sleep(time.Second * 2)
+
+		conn.Write([]byte("GET Foo"))
 	}()
 
 	server := server.NewServer(opts, cache.New())
